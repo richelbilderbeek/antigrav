@@ -378,7 +378,6 @@ mod tests {
         assert_eq!(get_init_bottom_wall_y(), -300.0);
     }
 
-
     #[test]
     fn test_number_of_players() {
         let app: App = create_app_without_event_loop();
