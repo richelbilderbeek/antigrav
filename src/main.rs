@@ -13,18 +13,14 @@ use bevy::{
     sprite::MaterialMesh2dBundle,
 };
 
+mod ball;
 mod game_layout;
 mod paddle;
 mod stepping;
 mod wall_location;
+use ball::*;
 use paddle::*;
 use wall_location::WallLocation;
-
-// We set the z-value of the ball to 1 so it renders on top in the case of overlapping sprites.
-const BALL_STARTING_POSITION: Vec3 = Vec3::new(0.0, -50.0, 1.0);
-const BALL_DIAMETER: f32 = 30.;
-const BALL_SPEED: f32 = 400.0;
-const INITIAL_BALL_DIRECTION: Vec2 = Vec2::new(0.5, -0.5);
 
 const BACKGROUND_COLOR: Color = Color::rgb(0.9, 0.9, 0.9);
 const BALL_COLOR: Color = Color::rgb(1.0, 0.5, 0.5);
@@ -34,7 +30,10 @@ fn create_app_without_event_loop() -> App {
     let mut app = App::new();
     app.insert_resource(ClearColor(BACKGROUND_COLOR));
     app.add_event::<CollisionEvent>();
-    app.add_systems(Startup, (setup, setup_camera, setup_paddle));
+    app.add_systems(
+        Startup,
+        (setup_ball, setup_camera, setup_paddle, setup_wall_bundles),
+    );
     // Add our gameplay simulation systems to the fixed timestep schedule
     // which runs at 64 Hz by default
     app.add_systems(
@@ -57,9 +56,6 @@ fn create_app() -> App {
     );
     return app;
 }
-
-#[derive(Component)]
-struct Ball;
 
 #[derive(Component, Deref, DerefMut)]
 struct Velocity(Vec2);
@@ -109,6 +105,25 @@ impl WallBundle {
     }
 }
 
+fn setup_ball(
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<ColorMaterial>>,
+) {
+    // Ball
+    commands.spawn((
+        MaterialMesh2dBundle {
+            mesh: meshes.add(Circle::default()).into(),
+            material: materials.add(BALL_COLOR),
+            transform: Transform::from_translation(get_ball_starting_position())
+                .with_scale(Vec2::splat(get_ball_diameter()).extend(1.)),
+            ..default()
+        },
+        Ball,
+        Velocity(get_initial_ball_direction().normalize() * get_ball_speed()),
+    ));
+}
+
 // Add the camera to our world
 fn setup_camera(mut commands: Commands) {
     commands.spawn(Camera2dBundle::default());
@@ -138,24 +153,7 @@ fn setup_paddle(mut commands: Commands) {
 }
 
 // Add the game's entities to our world
-fn setup(
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<ColorMaterial>>,
-) {
-    // Ball
-    commands.spawn((
-        MaterialMesh2dBundle {
-            mesh: meshes.add(Circle::default()).into(),
-            material: materials.add(BALL_COLOR),
-            transform: Transform::from_translation(BALL_STARTING_POSITION)
-                .with_scale(Vec2::splat(BALL_DIAMETER).extend(1.)),
-            ..default()
-        },
-        Ball,
-        Velocity(INITIAL_BALL_DIRECTION.normalize() * BALL_SPEED),
-    ));
-
+fn setup_wall_bundles(mut commands: Commands) {
     // Walls
     commands.spawn(WallBundle::new(WallLocation::Left));
     commands.spawn(WallBundle::new(WallLocation::Right));
@@ -216,7 +214,10 @@ fn check_for_collisions(
     // check collision with walls
     for (_collider_entity, transform, _maybe_brick) in &collider_query {
         let collision = collide_with_side(
-            BoundingCircle::new(ball_transform.translation.truncate(), BALL_DIAMETER / 2.),
+            BoundingCircle::new(
+                ball_transform.translation.truncate(),
+                get_ball_diameter() / 2.,
+            ),
             Aabb2d::new(
                 transform.translation.truncate(),
                 transform.scale.truncate() / 2.,
