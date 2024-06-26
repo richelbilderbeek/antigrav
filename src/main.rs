@@ -5,7 +5,6 @@ fn main() {
     app.run();
 }
 
-
 use bevy::{
     math::bounding::{Aabb2d, BoundingCircle, BoundingVolume, IntersectsVolume},
     prelude::*,
@@ -13,8 +12,8 @@ use bevy::{
 };
 use game_layout::{create_initial_layout, GameLayout};
 
-mod stepping;
 mod game_layout;
+mod stepping;
 
 //use crate::initial_layout::get_init_paddle_y;
 
@@ -47,11 +46,7 @@ fn create_app_without_event_loop() -> App {
     // which runs at 64 Hz by default
     app.add_systems(
         FixedUpdate,
-        (
-            apply_velocity,
-            move_paddle,
-            check_for_collisions,
-        )
+        (apply_velocity, move_paddle, check_for_collisions)
             // `chain`ing systems together runs them in order
             .chain(),
     );
@@ -61,14 +56,12 @@ fn create_app_without_event_loop() -> App {
 
 fn create_app() -> App {
     let mut app = create_app_without_event_loop();
-    app.add_plugins(DefaultPlugins)
-        .add_plugins(
-            stepping::SteppingPlugin::default()
-                .add_schedule(Update)
-                .add_schedule(FixedUpdate)
-                .at(Val::Percent(35.0), Val::Percent(50.0)),
-        )
-    ;
+    app.add_plugins(DefaultPlugins).add_plugins(
+        stepping::SteppingPlugin::default()
+            .add_schedule(Update)
+            .add_schedule(FixedUpdate)
+            .at(Val::Percent(35.0), Val::Percent(50.0)),
+    );
     return app;
 }
 
@@ -165,9 +158,7 @@ impl WallBundle {
 }
 
 // Add the camera to our world
-fn setup_camera(
-    mut commands: Commands,
-) {
+fn setup_camera(mut commands: Commands) {
     commands.spawn(Camera2dBundle::default());
 }
 
@@ -241,8 +232,10 @@ fn move_paddle(
     // Update the paddle position,
     // making sure it doesn't cause the paddle to leave the arena
     let layout = create_initial_layout();
-    let left_bound = layout.left_wall_x + WALL_THICKNESS / 2.0 + PADDLE_SIZE.x / 2.0 + PADDLE_PADDING;
-    let right_bound = layout.right_wall_x - WALL_THICKNESS / 2.0 - PADDLE_SIZE.x / 2.0 - PADDLE_PADDING;
+    let left_bound =
+        layout.left_wall_x + WALL_THICKNESS / 2.0 + PADDLE_SIZE.x / 2.0 + PADDLE_PADDING;
+    let right_bound =
+        layout.right_wall_x - WALL_THICKNESS / 2.0 - PADDLE_SIZE.x / 2.0 - PADDLE_PADDING;
 
     paddle_transform.translation.x = new_paddle_position.clamp(left_bound, right_bound);
 }
@@ -302,7 +295,6 @@ fn check_for_collisions(
     }
 }
 
-
 #[derive(Debug, PartialEq, Eq, Copy, Clone)]
 enum Collision {
     Left,
@@ -339,14 +331,12 @@ fn count_n_players(app: &App) -> usize {
     return app.world.components().len();
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
     fn test_bottom_wall_y() {
-        
         assert_eq!(create_initial_layout().bottom_wall_y, -300.0);
     }
 
@@ -356,7 +346,4 @@ mod tests {
         //let app = create_empty_app();
         assert_ne!(count_n_players(&app), 0);
     }
-
-    
 }
-
