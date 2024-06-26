@@ -13,7 +13,7 @@ use crate::game_layout::create_initial_layout;
 use crate::paddle::Paddle;
 use crate::player::Player;
 use crate::velocity::Velocity;
-use crate::wall_bundle::WallBundle;
+use crate::wall::Wall;
 use bevy::{
     math::bounding::{Aabb2d, BoundingCircle, BoundingVolume, IntersectsVolume},
     prelude::*,
@@ -30,7 +30,7 @@ mod paddle;
 mod player;
 mod stepping;
 mod velocity;
-mod wall_bundle;
+mod wall;
 mod wall_location;
 use ball::*;
 use paddle::*;
@@ -41,7 +41,7 @@ fn create_app_without_event_loop() -> App {
     app.add_event::<CollisionEvent>();
     app.add_systems(
         Startup,
-        (setup_ball, setup_camera, setup_paddle, setup_wall_bundles),
+        (setup_ball, setup_camera, setup_paddle, setup_walls),
     );
     // Add our gameplay simulation systems to the fixed timestep schedule
     // which runs at 64 Hz by default
@@ -113,12 +113,12 @@ fn setup_paddle(mut commands: Commands) {
 }
 
 // Add the game's entities to our world
-fn setup_wall_bundles(mut commands: Commands) {
+fn setup_walls(mut commands: Commands) {
     // Walls
-    commands.spawn(WallBundle::new(WallLocation::Left));
-    commands.spawn(WallBundle::new(WallLocation::Right));
-    commands.spawn(WallBundle::new(WallLocation::Bottom));
-    commands.spawn(WallBundle::new(WallLocation::Top));
+    commands.spawn(Wall::new(WallLocation::Left));
+    commands.spawn(Wall::new(WallLocation::Right));
+    commands.spawn(Wall::new(WallLocation::Bottom));
+    commands.spawn(Wall::new(WallLocation::Top));
 }
 
 fn move_paddle(
