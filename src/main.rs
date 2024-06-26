@@ -5,6 +5,8 @@ fn main() {
     app.run();
 }
 
+use std::any::Any;
+
 use crate::game_layout::create_initial_layout;
 use crate::paddle::Paddle;
 use bevy::{
@@ -24,8 +26,6 @@ use wall_location::WallLocation;
 
 fn create_app_without_event_loop() -> App {
     let mut app = App::new();
-    const BACKGROUND_COLOR: Color = Color::rgb(0.9, 0.9, 0.9);
-    app.insert_resource(ClearColor(BACKGROUND_COLOR));
     app.add_event::<CollisionEvent>();
     app.add_systems(
         Startup,
@@ -284,8 +284,33 @@ fn collide_with_side(ball: BoundingCircle, wall: Aabb2d) -> Option<Collision> {
     Some(side)
 }
 
-fn count_n_players(app: &App) -> usize {
-    return app.world.components().len();
+/*
+// Does not work as a Ball is a Bundle
+fn count_n_balls(app: &App) -> usize {
+    let a_ball = Ball;
+    let ball_id = a_ball.type_id();
+    let mut n = 0;
+
+    for entity in app.world.components().iter() {
+        if entity.type_id().unwrap() == ball_id {
+            n += 1;
+        }
+    }
+    return n;
+}
+*/
+
+fn count_n_paddles(app: &App) -> usize {
+    let a_paddle = Paddle;
+    let paddle_id = a_paddle.type_id();
+    let mut n = 0;
+
+    for entity in app.world.components().iter() {
+        if entity.type_id().unwrap() == paddle_id {
+            n += 1;
+        }
+    }
+    return n;
 }
 
 #[cfg(test)]
@@ -297,10 +322,52 @@ mod tests {
         assert_eq!(create_initial_layout().bottom_wall_y, -300.0);
     }
 
+    /*
     #[test]
-    fn test_number_of_players() {
-        let app: App = create_app_without_event_loop();
-        //let app = create_empty_app();
-        assert_ne!(count_n_players(&app), 0);
+    fn test_no_balls() {
+        let mut app = App::new();
+        app.update();
+        assert_eq!(count_n_balls(&app), 0);
     }
+    */
+
+    #[test]
+    fn test_no_paddles() {
+        let mut app = App::new();
+        app.update();
+        assert_eq!(count_n_paddles(&app), 0);
+    }
+
+    /*
+    #[test]
+    fn test_setup_ball() {
+        let mut app = App::new();
+        assert_eq!(count_n_balls(&app), 0);
+        app.add_systems(Startup, setup_ball);
+        app.update();
+        assert_eq!(count_n_balls(&app), 1);
+    }
+    */
+
+    #[test]
+    fn test_setup_paddle() {
+        let mut app = App::new();
+        assert_eq!(count_n_paddles(&app), 0);
+        app.add_systems(Startup, setup_paddle);
+        app.update();
+        assert_eq!(count_n_paddles(&app), 1);
+    }
+
+    /*
+    #[test]
+    fn test_number_of_balls() {
+
+        let mut app = App::new();
+        assert_eq!(count_n_balls(&app), 0);
+        app.add_systems(
+        Startup,
+        (setup_ball));
+        assert_eq!(count_n_balls(&app), 1);
+    );
+    */
 }
