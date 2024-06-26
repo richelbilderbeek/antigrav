@@ -8,6 +8,7 @@ fn main() {
 use crate::ball::Ball;
 use crate::collider::Collider;
 use crate::collision::Collision;
+use crate::collision_event::CollisionEvent;
 use crate::game_layout::create_initial_layout;
 use crate::paddle::Paddle;
 use crate::player::Player;
@@ -23,6 +24,7 @@ use std::any::Any;
 mod ball;
 mod collider;
 mod collision;
+mod collision_event;
 mod game_layout;
 mod paddle;
 mod player;
@@ -63,9 +65,6 @@ fn create_app() -> App {
     );
     return app;
 }
-
-#[derive(Event, Default)]
-struct CollisionEvent;
 
 fn setup_ball(
     mut commands: Commands,
