@@ -70,6 +70,11 @@ fn create_app() -> App {
             .add_schedule(FixedUpdate)
             .at(Val::Percent(35.0), Val::Percent(50.0)),
     );
+    // we want Bevy to measure these values for us:
+    app.add_plugins(bevy::diagnostic::FrameTimeDiagnosticsPlugin)
+        .add_plugins(bevy::diagnostic::EntityCountDiagnosticsPlugin)
+        .add_plugins(bevy::diagnostic::SystemInformationDiagnosticsPlugin)
+        .add_plugins(PerfUiPlugin);
     return app;
 }
 
