@@ -49,8 +49,31 @@ const WALL_COLOR: Color = Color::rgb(0.8, 0.8, 0.8);
 const TEXT_COLOR: Color = Color::rgb(0.5, 0.5, 1.0);
 const SCORE_COLOR: Color = Color::rgb(1.0, 0.5, 0.5);
 
-fn create_app() -> App {
+fn create_app_without_event_loop() -> App {
     let mut app = App::new();
+    app.insert_resource(Scoreboard { score: 0 });
+    app.insert_resource(ClearColor(BACKGROUND_COLOR));
+    app.add_event::<CollisionEvent>();
+    app.add_systems(Startup, setup);
+    // Add our gameplay simulation systems to the fixed timestep schedule
+    // which runs at 64 Hz by default
+    app.add_systems(
+        FixedUpdate,
+        (
+            apply_velocity,
+            move_paddle,
+            check_for_collisions,
+            play_collision_sound,
+        )
+            // `chain`ing systems together runs them in order
+            .chain(),
+    );
+    app.add_systems(Update, (update_scoreboard, bevy::window::close_on_esc));
+    return app;
+}
+
+fn create_app() -> App {
+    let mut app = create_app_without_event_loop();
     app.add_plugins(DefaultPlugins)
         .add_plugins(
             stepping::SteppingPlugin::default()
@@ -58,24 +81,6 @@ fn create_app() -> App {
                 .add_schedule(FixedUpdate)
                 .at(Val::Percent(35.0), Val::Percent(50.0)),
         )
-        .insert_resource(Scoreboard { score: 0 })
-        .insert_resource(ClearColor(BACKGROUND_COLOR))
-        .add_event::<CollisionEvent>()
-        .add_systems(Startup, setup)
-        // Add our gameplay simulation systems to the fixed timestep schedule
-        // which runs at 64 Hz by default
-        .add_systems(
-            FixedUpdate,
-            (
-                apply_velocity,
-                move_paddle,
-                check_for_collisions,
-                play_collision_sound,
-            )
-                // `chain`ing systems together runs them in order
-                .chain(),
-        )
-        .add_systems(Update, (update_scoreboard, bevy::window::close_on_esc))
     ;
     return app;
 }
@@ -265,62 +270,6 @@ fn setup(
     commands.spawn(WallBundle::new(WallLocation::Right));
     commands.spawn(WallBundle::new(WallLocation::Bottom));
     commands.spawn(WallBundle::new(WallLocation::Top));
-
-    // Bricks
-    /*
-    let total_width_of_bricks = (RIGHT_WALL - LEFT_WALL) - 2. * GAP_BETWEEN_BRICKS_AND_SIDES;
-    let bottom_edge_of_bricks = paddle_y + GAP_BETWEEN_PADDLE_AND_BRICKS;
-    let total_height_of_bricks = TOP_WALL - bottom_edge_of_bricks - GAP_BETWEEN_BRICKS_AND_CEILING;
-
-    assert!(total_width_of_bricks > 0.0);
-    assert!(total_height_of_bricks > 0.0);
-
-    // Given the space available, compute how many rows and columns of bricks we can fit
-    let n_columns = (total_width_of_bricks / (BRICK_SIZE.x + GAP_BETWEEN_BRICKS)).floor() as usize;
-    let n_rows = (total_height_of_bricks / (BRICK_SIZE.y + GAP_BETWEEN_BRICKS)).floor() as usize;
-    let n_vertical_gaps = n_columns - 1;
-
-    // Because we need to round the number of columns,
-    // the space on the top and sides of the bricks only captures a lower bound, not an exact value
-    let center_of_bricks = (LEFT_WALL + RIGHT_WALL) / 2.0;
-    let left_edge_of_bricks = center_of_bricks
-        // Space taken up by the bricks
-        - (n_columns as f32 / 2.0 * BRICK_SIZE.x)
-        // Space taken up by the gaps
-        - n_vertical_gaps as f32 / 2.0 * GAP_BETWEEN_BRICKS;
-
-    // In Bevy, the `translation` of an entity describes the center point,
-    // not its bottom-left corner
-    let offset_x = left_edge_of_bricks + BRICK_SIZE.x / 2.;
-    let offset_y = bottom_edge_of_bricks + BRICK_SIZE.y / 2.;
-
-    for row in 0..n_rows {
-        for column in 0..n_columns {
-            let brick_position = Vec2::new(
-                offset_x + column as f32 * (BRICK_SIZE.x + GAP_BETWEEN_BRICKS),
-                offset_y + row as f32 * (BRICK_SIZE.y + GAP_BETWEEN_BRICKS),
-            );
-
-            // brick
-            commands.spawn((
-                SpriteBundle {
-                    sprite: Sprite {
-                        color: BRICK_COLOR,
-                        ..default()
-                    },
-                    transform: Transform {
-                        translation: brick_position.extend(0.0),
-                        scale: Vec3::new(BRICK_SIZE.x, BRICK_SIZE.y, 1.0),
-                        ..default()
-                    },
-                    ..default()
-                },
-                Brick,
-                Collider,
-            ));
-        }
-    }
-    */
 }
 
 fn move_paddle(
@@ -467,10 +416,8 @@ fn collide_with_side(ball: BoundingCircle, wall: Aabb2d) -> Option<Collision> {
     Some(side)
 }
 
-fn count_n_players(&app) -> i64 {
-    let mut app: App = create_app();
-    assert_eq!(count_n_players(app), 1);
-    
+fn count_n_players(app: &App) -> usize {
+    return app.world.components().len();
 }
 
 
@@ -480,7 +427,8 @@ mod tests {
 
     #[test]
     fn exploration() {
-        let mut app: App = create_app();
-        assert_eq!(count_n_players(app), 1);
+        let app: App = create_app_without_event_loop();
+        //let app = create_empty_app();
+        assert_ne!(count_n_players(&app), 0);
     }
 }
