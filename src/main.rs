@@ -30,28 +30,13 @@ const RIGHT_WALL: f32 = 450.;
 const BOTTOM_WALL: f32 = -300.;
 const TOP_WALL: f32 = 300.;
 
-// const BRICK_SIZE: Vec2 = Vec2::new(100., 30.);
-// These values are exact
-// const GAP_BETWEEN_PADDLE_AND_BRICKS: f32 = 270.0;
-// const GAP_BETWEEN_BRICKS: f32 = 5.0;
-// These values are lower bounds, as the number of bricks is computed
-// const GAP_BETWEEN_BRICKS_AND_CEILING: f32 = 20.0;
-// const GAP_BETWEEN_BRICKS_AND_SIDES: f32 = 20.0;
-
-const SCOREBOARD_FONT_SIZE: f32 = 40.0;
-const SCOREBOARD_TEXT_PADDING: Val = Val::Px(5.0);
-
 const BACKGROUND_COLOR: Color = Color::rgb(0.9, 0.9, 0.9);
 const PADDLE_COLOR: Color = Color::rgb(0.3, 0.3, 0.7);
 const BALL_COLOR: Color = Color::rgb(1.0, 0.5, 0.5);
-// const BRICK_COLOR: Color = Color::rgb(0.5, 0.5, 1.0);
 const WALL_COLOR: Color = Color::rgb(0.8, 0.8, 0.8);
-const TEXT_COLOR: Color = Color::rgb(0.5, 0.5, 1.0);
-const SCORE_COLOR: Color = Color::rgb(1.0, 0.5, 0.5);
 
 fn create_app_without_event_loop() -> App {
     let mut app = App::new();
-    app.insert_resource(Scoreboard { score: 0 });
     app.insert_resource(ClearColor(BACKGROUND_COLOR));
     app.add_event::<CollisionEvent>();
     app.add_systems(Startup, setup);
@@ -68,7 +53,7 @@ fn create_app_without_event_loop() -> App {
             // `chain`ing systems together runs them in order
             .chain(),
     );
-    app.add_systems(Update, (update_scoreboard, bevy::window::close_on_esc));
+    app.add_systems(Update, bevy::window::close_on_esc);
     return app;
 }
 
@@ -183,15 +168,6 @@ impl WallBundle {
     }
 }
 
-// This resource tracks the game's score
-#[derive(Resource)]
-struct Scoreboard {
-    score: usize,
-}
-
-#[derive(Component)]
-struct ScoreboardUi;
-
 // Add the game's entities to our world
 fn setup(
     mut commands: Commands,
@@ -239,32 +215,6 @@ fn setup(
         Velocity(INITIAL_BALL_DIRECTION.normalize() * BALL_SPEED),
     ));
 
-    // Scoreboard
-    commands.spawn((
-        ScoreboardUi,
-        TextBundle::from_sections([
-            TextSection::new(
-                "Score: ",
-                TextStyle {
-                    font_size: SCOREBOARD_FONT_SIZE,
-                    color: TEXT_COLOR,
-                    ..default()
-                },
-            ),
-            TextSection::from_style(TextStyle {
-                font_size: SCOREBOARD_FONT_SIZE,
-                color: SCORE_COLOR,
-                ..default()
-            }),
-        ])
-        .with_style(Style {
-            position_type: PositionType::Absolute,
-            top: SCOREBOARD_TEXT_PADDING,
-            left: SCOREBOARD_TEXT_PADDING,
-            ..default()
-        }),
-    ));
-
     // Walls
     commands.spawn(WallBundle::new(WallLocation::Left));
     commands.spawn(WallBundle::new(WallLocation::Right));
@@ -307,14 +257,8 @@ fn apply_velocity(mut query: Query<(&mut Transform, &Velocity)>, time: Res<Time>
     }
 }
 
-fn update_scoreboard(scoreboard: Res<Scoreboard>, mut query: Query<&mut Text, With<ScoreboardUi>>) {
-    let mut text = query.single_mut();
-    text.sections[1].value = scoreboard.score.to_string();
-}
-
 fn check_for_collisions(
-    mut commands: Commands,
-    mut scoreboard: ResMut<Scoreboard>,
+    _commands: Commands,
     mut ball_query: Query<(&mut Velocity, &Transform), With<Ball>>,
     collider_query: Query<(Entity, &Transform, Option<&Brick>), With<Collider>>,
     mut collision_events: EventWriter<CollisionEvent>,
@@ -322,7 +266,7 @@ fn check_for_collisions(
     let (mut ball_velocity, ball_transform) = ball_query.single_mut();
 
     // check collision with walls
-    for (collider_entity, transform, maybe_brick) in &collider_query {
+    for (_collider_entity, transform, _maybe_brick) in &collider_query {
         let collision = collide_with_side(
             BoundingCircle::new(ball_transform.translation.truncate(), BALL_DIAMETER / 2.),
             Aabb2d::new(
@@ -334,12 +278,6 @@ fn check_for_collisions(
         if let Some(collision) = collision {
             // Sends a collision event so that other systems can react to the collision
             collision_events.send_default();
-
-            // Bricks should be despawned and increment the scoreboard on collision
-            if maybe_brick.is_some() {
-                scoreboard.score += 1;
-                commands.entity(collider_entity).despawn();
-            }
 
             // reflect the ball when it collides
             let mut reflect_x = false;
