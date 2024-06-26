@@ -5,20 +5,30 @@ fn main() {
     app.run();
 }
 
-use std::any::Any;
-
+use crate::ball::Ball;
+use crate::collider::Collider;
+use crate::collision::Collision;
 use crate::game_layout::create_initial_layout;
 use crate::paddle::Paddle;
+use crate::player::Player;
+use crate::velocity::Velocity;
+use crate::wall_bundle::WallBundle;
 use bevy::{
     math::bounding::{Aabb2d, BoundingCircle, BoundingVolume, IntersectsVolume},
     prelude::*,
     sprite::MaterialMesh2dBundle,
 };
+use std::any::Any;
 
 mod ball;
+mod collider;
+mod collision;
 mod game_layout;
 mod paddle;
+mod player;
 mod stepping;
+mod velocity;
+mod wall_bundle;
 mod wall_location;
 use ball::*;
 use paddle::*;
@@ -54,51 +64,8 @@ fn create_app() -> App {
     return app;
 }
 
-#[derive(Component, Deref, DerefMut)]
-struct Velocity(Vec2);
-
-#[derive(Component)]
-struct Collider;
-
 #[derive(Event, Default)]
 struct CollisionEvent;
-
-// This bundle is a collection of the components that define a "wall" in our game
-#[derive(Bundle)]
-struct WallBundle {
-    // You can nest bundles inside of other bundles like this
-    // Allowing you to compose their functionality
-    sprite_bundle: SpriteBundle,
-    collider: Collider,
-}
-
-impl WallBundle {
-    // This "builder method" allows us to reuse logic across our wall entities,
-    // making our code easier to read and less prone to bugs when we change the logic
-    fn new(location: WallLocation) -> WallBundle {
-        let wall_color: Color = Color::rgb(0.8, 0.8, 0.8);
-        WallBundle {
-            sprite_bundle: SpriteBundle {
-                transform: Transform {
-                    // We need to convert our Vec2 into a Vec3, by giving it a z-coordinate
-                    // This is used to determine the order of our sprites
-                    translation: location.position().extend(0.0),
-                    // The z-scale of 2D objects must always be 1.0,
-                    // or their ordering will be affected in surprising ways.
-                    // See https://github.com/bevyengine/bevy/issues/4149
-                    scale: location.size().extend(1.0),
-                    ..default()
-                },
-                sprite: Sprite {
-                    color: wall_color,
-                    ..default()
-                },
-                ..default()
-            },
-            collider: Collider,
-        }
-    }
-}
 
 fn setup_ball(
     mut commands: Commands,
@@ -126,7 +93,6 @@ fn setup_camera(mut commands: Commands) {
 
 // Add the paddle to our world
 fn setup_paddle(mut commands: Commands) {
-    // Paddle
     let paddle_y = create_initial_layout().paddle_y;
 
     commands.spawn((
@@ -249,14 +215,6 @@ fn check_for_collisions(
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Copy, Clone)]
-enum Collision {
-    Left,
-    Right,
-    Top,
-    Bottom,
-}
-
 // Returns `Some` if `ball` collides with `wall`. The returned `Collision` is the
 // side of `wall` that `ball` hit.
 fn collide_with_side(ball: BoundingCircle, wall: Aabb2d) -> Option<Collision> {
@@ -281,8 +239,6 @@ fn collide_with_side(ball: BoundingCircle, wall: Aabb2d) -> Option<Collision> {
     Some(side)
 }
 
-/*
-// Does not work as a Ball is a Bundle
 fn count_n_balls(app: &App) -> usize {
     let a_ball = Ball;
     let ball_id = a_ball.type_id();
@@ -295,7 +251,6 @@ fn count_n_balls(app: &App) -> usize {
     }
     return n;
 }
-*/
 
 fn count_n_paddles(app: &App) -> usize {
     let a_paddle = Paddle;
@@ -310,6 +265,21 @@ fn count_n_paddles(app: &App) -> usize {
     return n;
 }
 
+/*
+fn count_n_players(app: &App) -> usize {
+    let a_player = Player;
+    let player_id = a_player.type_id();
+    let mut n = 0;
+
+    for entity in app.world.components().iter() {
+        if entity.type_id().unwrap() == player_id {
+            n += 1;
+        }
+    }
+    return n;
+}
+*/
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -319,14 +289,12 @@ mod tests {
         assert_eq!(create_initial_layout().bottom_wall_y, -300.0);
     }
 
-    /*
     #[test]
     fn test_no_balls() {
         let mut app = App::new();
         app.update();
         assert_eq!(count_n_balls(&app), 0);
     }
-    */
 
     #[test]
     fn test_no_paddles() {
@@ -334,6 +302,15 @@ mod tests {
         app.update();
         assert_eq!(count_n_paddles(&app), 0);
     }
+
+    /*
+    #[test]
+    fn test_no_players() {
+        let mut app = App::new();
+        app.update();
+        assert_eq!(count_n_players(&app), 0);
+    }
+    */
 
     /*
     #[test]
@@ -354,17 +331,4 @@ mod tests {
         app.update();
         assert_eq!(count_n_paddles(&app), 1);
     }
-
-    /*
-    #[test]
-    fn test_number_of_balls() {
-
-        let mut app = App::new();
-        assert_eq!(count_n_balls(&app), 0);
-        app.add_systems(
-        Startup,
-        (setup_ball));
-        assert_eq!(count_n_balls(&app), 1);
-    );
-    */
 }
