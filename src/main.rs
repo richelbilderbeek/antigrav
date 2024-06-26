@@ -51,7 +51,6 @@ fn create_app_without_event_loop() -> App {
             apply_velocity,
             move_paddle,
             check_for_collisions,
-            play_collision_sound,
         )
             // `chain`ing systems together runs them in order
             .chain(),
@@ -179,13 +178,7 @@ fn setup(
     mut materials: ResMut<Assets<ColorMaterial>>,
     asset_server: Res<AssetServer>,
 ) {
-    // Sound
-    let ball_collision_sound = asset_server.load("sounds/breakout_collision.ogg");
-    commands.insert_resource(CollisionSound(ball_collision_sound));
-
     // Paddle
-    
-    //let paddle_y = BOTTOM_WALL + GAP_BETWEEN_PADDLE_AND_FLOOR;
     let paddle_y = create_initial_layout().paddle_y;
 
     commands.spawn((
@@ -309,22 +302,6 @@ fn check_for_collisions(
     }
 }
 
-fn play_collision_sound(
-    mut commands: Commands,
-    mut collision_events: EventReader<CollisionEvent>,
-    sound: Res<CollisionSound>,
-) {
-    // Play a sound once per frame if a collision occurred.
-    if !collision_events.is_empty() {
-        // This prevents events staying active on the next frame.
-        collision_events.clear();
-        commands.spawn(AudioBundle {
-            source: sound.0.clone(),
-            // auto-despawn the entity when playback finishes
-            settings: PlaybackSettings::DESPAWN,
-        });
-    }
-}
 
 #[derive(Debug, PartialEq, Eq, Copy, Clone)]
 enum Collision {
