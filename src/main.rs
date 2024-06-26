@@ -11,12 +11,12 @@ use bevy::{
     prelude::*,
     sprite::MaterialMesh2dBundle,
 };
-use initial_layout::get_init_bottom_wall_y;
+use initial_layout::create_initial_layout;
 
 mod stepping;
 mod initial_layout;
 
-use crate::initial_layout::get_init_paddle_y;
+//use crate::initial_layout::get_init_paddle_y;
 
 // These constants are defined in `Transform` units.
 // Using the default 2D camera they correspond 1:1 with screen pixels.
@@ -121,13 +121,13 @@ impl WallLocation {
         match self {
             WallLocation::Left => Vec2::new(LEFT_WALL, 0.),
             WallLocation::Right => Vec2::new(RIGHT_WALL, 0.),
-            WallLocation::Bottom => Vec2::new(0., get_init_bottom_wall_y()),
+            WallLocation::Bottom => Vec2::new(0., create_initial_layout().bottom_wall_y),
             WallLocation::Top => Vec2::new(0., TOP_WALL),
         }
     }
 
     fn size(&self) -> Vec2 {
-        let arena_height = TOP_WALL - get_init_bottom_wall_y();
+        let arena_height = TOP_WALL - create_initial_layout().bottom_wall_y;
         let arena_width = RIGHT_WALL - LEFT_WALL;
         // Make sure we haven't messed up our constants
         assert!(arena_height > 0.0);
@@ -192,7 +192,7 @@ fn setup(
     // Paddle
     
     //let paddle_y = BOTTOM_WALL + GAP_BETWEEN_PADDLE_AND_FLOOR;
-    let paddle_y = get_init_paddle_y();
+    let paddle_y = create_initial_layout().paddle_y;
 
     commands.spawn((
         SpriteBundle {
@@ -375,7 +375,7 @@ mod tests {
     #[test]
     fn test_bottom_wall_y() {
         
-        assert_eq!(get_init_bottom_wall_y(), -300.0);
+        assert_eq!(create_initial_layout().bottom_wall_y, -300.0);
     }
 
     #[test]

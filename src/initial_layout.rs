@@ -1,10 +1,10 @@
 
-struct InitialLayout {
-    paddle_y: f32,
-    bottom_wall_y: f32,
+pub struct InitialLayout {
+    pub paddle_y: f32,
+    pub bottom_wall_y: f32,
 }
 
-fn create_initial_layout() -> InitialLayout {
+pub fn create_initial_layout() -> InitialLayout {
   const BOTTOM_WALL: f32 = -300.0;
   const GAP_BETWEEN_PADDLE_AND_FLOOR: f32 = 60.0;
   
@@ -18,11 +18,11 @@ fn create_initial_layout() -> InitialLayout {
   return layout;
 }
 
-pub fn get_init_paddle_y() -> f32 {
+fn get_init_paddle_y() -> f32 {
     return create_initial_layout().paddle_y;
 }
 
-pub fn get_init_bottom_wall_y() -> f32 {
+fn get_init_bottom_wall_y() -> f32 {
     return create_initial_layout().bottom_wall_y;
 }
 
