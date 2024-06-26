@@ -22,12 +22,9 @@ use ball::*;
 use paddle::*;
 use wall_location::WallLocation;
 
-const BACKGROUND_COLOR: Color = Color::rgb(0.9, 0.9, 0.9);
-const BALL_COLOR: Color = Color::rgb(1.0, 0.5, 0.5);
-const WALL_COLOR: Color = Color::rgb(0.8, 0.8, 0.8);
-
 fn create_app_without_event_loop() -> App {
     let mut app = App::new();
+    const BACKGROUND_COLOR: Color = Color::rgb(0.9, 0.9, 0.9);
     app.insert_resource(ClearColor(BACKGROUND_COLOR));
     app.add_event::<CollisionEvent>();
     app.add_systems(
@@ -82,6 +79,7 @@ impl WallBundle {
     // This "builder method" allows us to reuse logic across our wall entities,
     // making our code easier to read and less prone to bugs when we change the logic
     fn new(location: WallLocation) -> WallBundle {
+        let wall_color: Color = Color::rgb(0.8, 0.8, 0.8);
         WallBundle {
             sprite_bundle: SpriteBundle {
                 transform: Transform {
@@ -95,7 +93,7 @@ impl WallBundle {
                     ..default()
                 },
                 sprite: Sprite {
-                    color: WALL_COLOR,
+                    color: wall_color,
                     ..default()
                 },
                 ..default()
@@ -114,7 +112,7 @@ fn setup_ball(
     commands.spawn((
         MaterialMesh2dBundle {
             mesh: meshes.add(Circle::default()).into(),
-            material: materials.add(BALL_COLOR),
+            material: materials.add(get_ball_color()),
             transform: Transform::from_translation(get_ball_starting_position())
                 .with_scale(Vec2::splat(get_ball_diameter()).extend(1.)),
             ..default()

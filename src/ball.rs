@@ -5,16 +5,21 @@ use bevy::prelude::*;
 //const BALL_DIAMETER: f32 = 30.;
 //const BALL_SPEED: f32 = 400.0;
 //const INITIAL_BALL_DIRECTION: Vec2 = Vec2::new(0.5, -0.5);
+//const BALL_COLOR: Color = Color::rgb(1.0, 0.5, 0.5);
 
 #[derive(Component)]
 pub struct Ball;
 
-pub fn get_ball_starting_position() -> Vec3 {
-    return Vec3::new(0.0, -50.0, 1.0);
+pub fn get_ball_color() -> Color {
+    return Color::rgb(1.0, 0.5, 0.5);
 }
 
 pub fn get_ball_diameter() -> f32 {
     return 30.0;
+}
+
+pub fn get_ball_starting_position() -> Vec3 {
+    return Vec3::new(0.0, -50.0, 1.0);
 }
 
 pub fn get_ball_speed() -> f32 {
@@ -30,13 +35,18 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_ball_starting_position() {
-        assert_eq!(get_ball_starting_position(), Vec3::new(0.0, -50.0, 1.0));
+    fn test_ball_color() {
+        assert_eq!(get_ball_color(), Color::rgb(1.0, 0.5, 0.5));
     }
 
     #[test]
     fn test_ball_diameter() {
         assert_eq!(get_ball_diameter(), 30.0);
+    }
+
+    #[test]
+    fn test_ball_starting_position() {
+        assert_eq!(get_ball_starting_position(), Vec3::new(0.0, -50.0, 1.0));
     }
 
     #[test]
