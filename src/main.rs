@@ -1,17 +1,26 @@
 //! A simplified implementation of the classic game "Breakout".
 
+fn main() {
+    let mut app: App = create_app();
+    app.run();
+}
+
+
 use bevy::{
     math::bounding::{Aabb2d, BoundingCircle, BoundingVolume, IntersectsVolume},
     prelude::*,
     sprite::MaterialMesh2dBundle,
 };
+use initial_layout::get_init_bottom_wall_y;
 
 mod stepping;
+mod initial_layout;
+
+use crate::initial_layout::get_init_paddle_y;
 
 // These constants are defined in `Transform` units.
 // Using the default 2D camera they correspond 1:1 with screen pixels.
 const PADDLE_SIZE: Vec3 = Vec3::new(120.0, 20.0, 0.0);
-const GAP_BETWEEN_PADDLE_AND_FLOOR: f32 = 60.0;
 const PADDLE_SPEED: f32 = 500.0;
 // How close can the paddle get to the wall
 const PADDLE_PADDING: f32 = 10.0;
@@ -27,7 +36,6 @@ const WALL_THICKNESS: f32 = 10.0;
 const LEFT_WALL: f32 = -450.;
 const RIGHT_WALL: f32 = 450.;
 // y coordinates
-const BOTTOM_WALL: f32 = -300.;
 const TOP_WALL: f32 = 300.;
 
 const BACKGROUND_COLOR: Color = Color::rgb(0.9, 0.9, 0.9);
@@ -39,7 +47,7 @@ fn create_app_without_event_loop() -> App {
     let mut app = App::new();
     app.insert_resource(ClearColor(BACKGROUND_COLOR));
     app.add_event::<CollisionEvent>();
-    app.add_systems(Startup, setup);
+    app.add_systems(Startup, (setup, setup_camera));
     // Add our gameplay simulation systems to the fixed timestep schedule
     // which runs at 64 Hz by default
     app.add_systems(
@@ -68,11 +76,6 @@ fn create_app() -> App {
         )
     ;
     return app;
-}
-
-fn main() {
-    let mut app: App = create_app();
-    app.run();
 }
 
 #[derive(Component)]
@@ -118,13 +121,13 @@ impl WallLocation {
         match self {
             WallLocation::Left => Vec2::new(LEFT_WALL, 0.),
             WallLocation::Right => Vec2::new(RIGHT_WALL, 0.),
-            WallLocation::Bottom => Vec2::new(0., BOTTOM_WALL),
+            WallLocation::Bottom => Vec2::new(0., get_init_bottom_wall_y()),
             WallLocation::Top => Vec2::new(0., TOP_WALL),
         }
     }
 
     fn size(&self) -> Vec2 {
-        let arena_height = TOP_WALL - BOTTOM_WALL;
+        let arena_height = TOP_WALL - get_init_bottom_wall_y();
         let arena_width = RIGHT_WALL - LEFT_WALL;
         // Make sure we haven't messed up our constants
         assert!(arena_height > 0.0);
@@ -168,6 +171,13 @@ impl WallBundle {
     }
 }
 
+// Add the camera to our world
+fn setup_camera(
+    mut commands: Commands,
+) {
+    commands.spawn(Camera2dBundle::default());
+}
+
 // Add the game's entities to our world
 fn setup(
     mut commands: Commands,
@@ -175,15 +185,14 @@ fn setup(
     mut materials: ResMut<Assets<ColorMaterial>>,
     asset_server: Res<AssetServer>,
 ) {
-    // Camera
-    commands.spawn(Camera2dBundle::default());
-
     // Sound
     let ball_collision_sound = asset_server.load("sounds/breakout_collision.ogg");
     commands.insert_resource(CollisionSound(ball_collision_sound));
 
     // Paddle
-    let paddle_y = BOTTOM_WALL + GAP_BETWEEN_PADDLE_AND_FLOOR;
+    
+    //let paddle_y = BOTTOM_WALL + GAP_BETWEEN_PADDLE_AND_FLOOR;
+    let paddle_y = get_init_paddle_y();
 
     commands.spawn((
         SpriteBundle {
@@ -364,9 +373,19 @@ mod tests {
     use super::*;
 
     #[test]
-    fn exploration() {
+    fn test_bottom_wall_y() {
+        
+        assert_eq!(get_init_bottom_wall_y(), -300.0);
+    }
+
+
+    #[test]
+    fn test_number_of_players() {
         let app: App = create_app_without_event_loop();
         //let app = create_empty_app();
         assert_ne!(count_n_players(&app), 0);
     }
+
+    
 }
+
