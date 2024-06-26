@@ -30,8 +30,6 @@ const BALL_DIAMETER: f32 = 30.;
 const BALL_SPEED: f32 = 400.0;
 const INITIAL_BALL_DIRECTION: Vec2 = Vec2::new(0.5, -0.5);
 
-const WALL_THICKNESS: f32 = 10.0;
-
 const BACKGROUND_COLOR: Color = Color::rgb(0.9, 0.9, 0.9);
 const PADDLE_COLOR: Color = Color::rgb(0.3, 0.3, 0.7);
 const BALL_COLOR: Color = Color::rgb(1.0, 0.5, 0.5);
@@ -118,10 +116,10 @@ impl WallLocation {
 
         match self {
             WallLocation::Left | WallLocation::Right => {
-                Vec2::new(WALL_THICKNESS, arena_height + WALL_THICKNESS)
+                Vec2::new(layout.wall_thickness, arena_height + layout.wall_thickness)
             }
             WallLocation::Bottom | WallLocation::Top => {
-                Vec2::new(arena_width + WALL_THICKNESS, WALL_THICKNESS)
+                Vec2::new(arena_width + layout.wall_thickness, layout.wall_thickness)
             }
         }
     }
@@ -164,7 +162,6 @@ fn setup(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
-    asset_server: Res<AssetServer>,
 ) {
     // Paddle
     let paddle_y = create_initial_layout().paddle_y;
@@ -230,9 +227,9 @@ fn move_paddle(
     // making sure it doesn't cause the paddle to leave the arena
     let layout = create_initial_layout();
     let left_bound =
-        layout.left_wall_x + WALL_THICKNESS / 2.0 + PADDLE_SIZE.x / 2.0 + PADDLE_PADDING;
+        layout.left_wall_x + layout.wall_thickness / 2.0 + PADDLE_SIZE.x / 2.0 + PADDLE_PADDING;
     let right_bound =
-        layout.right_wall_x - WALL_THICKNESS / 2.0 - PADDLE_SIZE.x / 2.0 - PADDLE_PADDING;
+        layout.right_wall_x - layout.wall_thickness / 2.0 - PADDLE_SIZE.x / 2.0 - PADDLE_PADDING;
 
     paddle_transform.translation.x = new_paddle_position.clamp(left_bound, right_bound);
 }

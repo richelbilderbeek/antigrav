@@ -16,6 +16,7 @@ pub struct GameLayout {
     pub right_wall_x: f32,
     pub top_wall_y: f32,
     pub bottom_wall_y: f32,
+    pub wall_thickness: f32,
 }
 
 impl GameLayout {
@@ -28,6 +29,7 @@ impl GameLayout {
 }
 
 pub fn create_initial_layout() -> GameLayout {
+    //const WALL_THICKNESS: f32 = 10.0;
     const GAP_BETWEEN_PADDLE_AND_FLOOR: f32 = 60.0;
 
     let left_wall_x = -450.0;
@@ -44,6 +46,7 @@ pub fn create_initial_layout() -> GameLayout {
         right_wall_x,
         top_wall_y,
         bottom_wall_y,
+        wall_thickness: 10.0,
     };
     return layout;
 }
@@ -59,6 +62,7 @@ mod tests {
         assert!(layout.top_wall_y > 0.0);
         assert!(layout.paddle_y < layout.top_wall_y);
         assert!(layout.paddle_y > layout.bottom_wall_y);
+        assert_eq!(layout.wall_thickness, 10.0);
         assert!(layout.get_arena_height() > 0.0);
         assert!(layout.get_arena_width() > 0.0);
     }
