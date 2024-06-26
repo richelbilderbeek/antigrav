@@ -1,4 +1,4 @@
-//! A simplified implementation of the classic game "Breakout".
+// Based on https://github.com/bevyengine/bevy/blob/main/examples/games/breakout.rs
 
 fn main() {
     let mut app: App = create_app();
@@ -19,6 +19,7 @@ use bevy::{
     prelude::*,
     sprite::MaterialMesh2dBundle,
 };
+use iyes_perf_ui::prelude::*;
 use std::any::Any;
 
 mod ball;
@@ -41,7 +42,13 @@ fn create_app_without_event_loop() -> App {
     app.add_event::<CollisionEvent>();
     app.add_systems(
         Startup,
-        (setup_ball, setup_camera, setup_paddle, setup_walls),
+        (
+            setup_ball,
+            setup_camera,
+            setup_debug,
+            setup_paddle,
+            setup_walls,
+        ),
     );
     // Add our gameplay simulation systems to the fixed timestep schedule
     // which runs at 64 Hz by default
@@ -90,6 +97,10 @@ fn setup_camera(mut commands: Commands) {
     commands.spawn(Camera2dBundle::default());
 }
 
+fn setup_debug(mut commands: Commands) {
+    commands.spawn(PerfUiCompleteBundle::default());
+}
+
 // Add the paddle to our world
 fn setup_paddle(mut commands: Commands) {
     let paddle_y = create_initial_layout().paddle_y;
@@ -127,35 +138,49 @@ fn move_paddle(
     time: Res<Time>,
 ) {
     let mut paddle_transform = query.single_mut();
-    let mut direction = 0.0;
+    let mut delta_x = 0.0;
+    let mut delta_y = 0.0;
 
     if keyboard_input.pressed(KeyCode::ArrowLeft) {
-        direction -= 1.0;
+        delta_x -= 1.0;
     }
 
     if keyboard_input.pressed(KeyCode::ArrowRight) {
-        direction += 1.0;
+        delta_x += 1.0;
+    }
+    if keyboard_input.pressed(KeyCode::ArrowUp) {
+        delta_y += 1.0;
+    }
+    if keyboard_input.pressed(KeyCode::ArrowDown) {
+        delta_y -= 1.0;
+    }
+    if keyboard_input.pressed(KeyCode::Space) {
+        paddle_transform.scale *= 1.1;
     }
 
     // Calculate the new horizontal paddle position based on player input
-    let new_paddle_position =
-        paddle_transform.translation.x + direction * get_paddle_speed() * time.delta_seconds();
+    let new_paddle_x =
+        paddle_transform.translation.x + (delta_x * get_paddle_speed() * time.delta_seconds());
+    let new_paddle_y =
+        paddle_transform.translation.y + (delta_y * get_paddle_speed() * time.delta_seconds());
 
     // Update the paddle position,
     // making sure it doesn't cause the paddle to leave the arena
     let layout = create_initial_layout();
-    let left_bound = layout.left_wall_x
+    let minx = layout.left_wall_x
         + layout.wall_thickness / 2.0
         + get_paddle_size().x / 2.0
         + get_paddle_padding();
-    let right_bound = layout.right_wall_x
+    let maxx = layout.right_wall_x
         - layout.wall_thickness / 2.0
         - get_paddle_size().x / 2.0
         - get_paddle_padding();
 
-    paddle_transform.translation.x = new_paddle_position.clamp(left_bound, right_bound);
+    paddle_transform.translation.x = new_paddle_x.clamp(minx, maxx);
+    paddle_transform.translation.y = new_paddle_y.clamp(-1000.0, 1000.0);
 }
 
+// Moves everything that has a velocity
 fn apply_velocity(mut query: Query<(&mut Transform, &Velocity)>, time: Res<Time>) {
     for (mut transform, velocity) in &mut query {
         transform.translation.x += velocity.x * time.delta_seconds();
