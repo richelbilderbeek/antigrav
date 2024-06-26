@@ -63,9 +63,6 @@ struct Collider;
 #[derive(Event, Default)]
 struct CollisionEvent;
 
-#[derive(Component)]
-struct Brick;
-
 // This bundle is a collection of the components that define a "wall" in our game
 #[derive(Bundle)]
 struct WallBundle {
@@ -204,13 +201,13 @@ fn apply_velocity(mut query: Query<(&mut Transform, &Velocity)>, time: Res<Time>
 fn check_for_collisions(
     _commands: Commands,
     mut ball_query: Query<(&mut Velocity, &Transform), With<Ball>>,
-    collider_query: Query<(Entity, &Transform, Option<&Brick>), With<Collider>>,
+    collider_query: Query<(Entity, &Transform), With<Collider>>,
     mut collision_events: EventWriter<CollisionEvent>,
 ) {
     let (mut ball_velocity, ball_transform) = ball_query.single_mut();
 
     // check collision with walls
-    for (_collider_entity, transform, _maybe_brick) in &collider_query {
+    for (_collider_entity, transform) in &collider_query {
         let collision = collide_with_side(
             BoundingCircle::new(
                 ball_transform.translation.truncate(),
