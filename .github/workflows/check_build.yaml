@@ -21,6 +21,9 @@ jobs:
       - name: Install ALSA, adapted from https://stackoverflow.com/a/57728808
         run: sudo apt-get install -y libasound2-dev libwebkit2gtk-4.0
 
+      - name: Install udev, from https://stackoverflow.com/a/74529205
+        run: sudo apt-get install -y  libudev-dev
+
       - uses: actions-rs/cargo@v1
         with:
           command: check
