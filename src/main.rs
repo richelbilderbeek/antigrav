@@ -11,10 +11,10 @@ use bevy::{
     prelude::*,
     sprite::MaterialMesh2dBundle,
 };
-use initial_layout::create_initial_layout;
+use game_layout::{create_initial_layout, GameLayout};
 
 mod stepping;
-mod initial_layout;
+mod game_layout;
 
 //use crate::initial_layout::get_init_paddle_y;
 
@@ -32,11 +32,6 @@ const BALL_SPEED: f32 = 400.0;
 const INITIAL_BALL_DIRECTION: Vec2 = Vec2::new(0.5, -0.5);
 
 const WALL_THICKNESS: f32 = 10.0;
-// x coordinates
-const LEFT_WALL: f32 = -450.;
-const RIGHT_WALL: f32 = 450.;
-// y coordinates
-const TOP_WALL: f32 = 300.;
 
 const BACKGROUND_COLOR: Color = Color::rgb(0.9, 0.9, 0.9);
 const PADDLE_COLOR: Color = Color::rgb(0.3, 0.3, 0.7);
@@ -118,20 +113,19 @@ enum WallLocation {
 
 impl WallLocation {
     fn position(&self) -> Vec2 {
+        let layout = create_initial_layout();
         match self {
-            WallLocation::Left => Vec2::new(LEFT_WALL, 0.),
-            WallLocation::Right => Vec2::new(RIGHT_WALL, 0.),
-            WallLocation::Bottom => Vec2::new(0., create_initial_layout().bottom_wall_y),
-            WallLocation::Top => Vec2::new(0., TOP_WALL),
+            WallLocation::Left => Vec2::new(layout.left_wall_x, 0.),
+            WallLocation::Right => Vec2::new(layout.right_wall_x, 0.),
+            WallLocation::Bottom => Vec2::new(0., layout.bottom_wall_y),
+            WallLocation::Top => Vec2::new(0., layout.top_wall_y),
         }
     }
 
     fn size(&self) -> Vec2 {
-        let arena_height = TOP_WALL - create_initial_layout().bottom_wall_y;
-        let arena_width = RIGHT_WALL - LEFT_WALL;
-        // Make sure we haven't messed up our constants
-        assert!(arena_height > 0.0);
-        assert!(arena_width > 0.0);
+        let layout = create_initial_layout();
+        let arena_height = layout.get_arena_height();
+        let arena_width = layout.get_arena_width();
 
         match self {
             WallLocation::Left | WallLocation::Right => {
@@ -253,8 +247,9 @@ fn move_paddle(
 
     // Update the paddle position,
     // making sure it doesn't cause the paddle to leave the arena
-    let left_bound = LEFT_WALL + WALL_THICKNESS / 2.0 + PADDLE_SIZE.x / 2.0 + PADDLE_PADDING;
-    let right_bound = RIGHT_WALL - WALL_THICKNESS / 2.0 - PADDLE_SIZE.x / 2.0 - PADDLE_PADDING;
+    let layout = create_initial_layout();
+    let left_bound = layout.left_wall_x + WALL_THICKNESS / 2.0 + PADDLE_SIZE.x / 2.0 + PADDLE_PADDING;
+    let right_bound = layout.right_wall_x - WALL_THICKNESS / 2.0 - PADDLE_SIZE.x / 2.0 - PADDLE_PADDING;
 
     paddle_transform.translation.x = new_paddle_position.clamp(left_bound, right_bound);
 }
