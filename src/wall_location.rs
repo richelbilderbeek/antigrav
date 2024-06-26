@@ -35,3 +35,20 @@ impl WallLocation {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_sizes() {
+        assert_eq!(WallLocation::Left.size(), WallLocation::Right.size());
+        assert_eq!(WallLocation::Top.size(), WallLocation::Bottom.size());
+    }
+
+    #[test]
+    fn test_positions() {
+        assert!(WallLocation::Left.position().x < WallLocation::Right.position().x);
+        assert!(WallLocation::Top.position().y > WallLocation::Bottom.position().y);
+    }
+}

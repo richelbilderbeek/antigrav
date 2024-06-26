@@ -17,8 +17,6 @@ mod stepping;
 mod wall_location;
 use wall_location::WallLocation;
 
-//use crate::initial_layout::get_init_paddle_y;
-
 // These constants are defined in `Transform` units.
 // Using the default 2D camera they correspond 1:1 with screen pixels.
 const PADDLE_SIZE: Vec3 = Vec3::new(120.0, 20.0, 0.0);
