@@ -6,6 +6,7 @@ fn main() {
 }
 
 use crate::game_layout::create_initial_layout;
+use crate::paddle::Paddle;
 use bevy::{
     math::bounding::{Aabb2d, BoundingCircle, BoundingVolume, IntersectsVolume},
     prelude::*,
@@ -13,16 +14,11 @@ use bevy::{
 };
 
 mod game_layout;
+mod paddle;
 mod stepping;
 mod wall_location;
+use paddle::*;
 use wall_location::WallLocation;
-
-// These constants are defined in `Transform` units.
-// Using the default 2D camera they correspond 1:1 with screen pixels.
-const PADDLE_SIZE: Vec3 = Vec3::new(120.0, 20.0, 0.0);
-const PADDLE_SPEED: f32 = 500.0;
-// How close can the paddle get to the wall
-const PADDLE_PADDING: f32 = 10.0;
 
 // We set the z-value of the ball to 1 so it renders on top in the case of overlapping sprites.
 const BALL_STARTING_POSITION: Vec3 = Vec3::new(0.0, -50.0, 1.0);
@@ -31,7 +27,6 @@ const BALL_SPEED: f32 = 400.0;
 const INITIAL_BALL_DIRECTION: Vec2 = Vec2::new(0.5, -0.5);
 
 const BACKGROUND_COLOR: Color = Color::rgb(0.9, 0.9, 0.9);
-const PADDLE_COLOR: Color = Color::rgb(0.3, 0.3, 0.7);
 const BALL_COLOR: Color = Color::rgb(1.0, 0.5, 0.5);
 const WALL_COLOR: Color = Color::rgb(0.8, 0.8, 0.8);
 
@@ -39,7 +34,7 @@ fn create_app_without_event_loop() -> App {
     let mut app = App::new();
     app.insert_resource(ClearColor(BACKGROUND_COLOR));
     app.add_event::<CollisionEvent>();
-    app.add_systems(Startup, (setup, setup_camera));
+    app.add_systems(Startup, (setup, setup_camera, setup_paddle));
     // Add our gameplay simulation systems to the fixed timestep schedule
     // which runs at 64 Hz by default
     app.add_systems(
@@ -62,9 +57,6 @@ fn create_app() -> App {
     );
     return app;
 }
-
-#[derive(Component)]
-struct Paddle;
 
 #[derive(Component)]
 struct Ball;
@@ -122,12 +114,8 @@ fn setup_camera(mut commands: Commands) {
     commands.spawn(Camera2dBundle::default());
 }
 
-// Add the game's entities to our world
-fn setup(
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<ColorMaterial>>,
-) {
+// Add the paddle to our world
+fn setup_paddle(mut commands: Commands) {
     // Paddle
     let paddle_y = create_initial_layout().paddle_y;
 
@@ -135,11 +123,11 @@ fn setup(
         SpriteBundle {
             transform: Transform {
                 translation: Vec3::new(0.0, paddle_y, 0.0),
-                scale: PADDLE_SIZE,
+                scale: get_paddle_size(),
                 ..default()
             },
             sprite: Sprite {
-                color: PADDLE_COLOR,
+                color: get_paddle_color(),
                 ..default()
             },
             ..default()
@@ -147,7 +135,14 @@ fn setup(
         Paddle,
         Collider,
     ));
+}
 
+// Add the game's entities to our world
+fn setup(
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<ColorMaterial>>,
+) {
     // Ball
     commands.spawn((
         MaterialMesh2dBundle {
@@ -186,15 +181,19 @@ fn move_paddle(
 
     // Calculate the new horizontal paddle position based on player input
     let new_paddle_position =
-        paddle_transform.translation.x + direction * PADDLE_SPEED * time.delta_seconds();
+        paddle_transform.translation.x + direction * get_paddle_speed() * time.delta_seconds();
 
     // Update the paddle position,
     // making sure it doesn't cause the paddle to leave the arena
     let layout = create_initial_layout();
-    let left_bound =
-        layout.left_wall_x + layout.wall_thickness / 2.0 + PADDLE_SIZE.x / 2.0 + PADDLE_PADDING;
-    let right_bound =
-        layout.right_wall_x - layout.wall_thickness / 2.0 - PADDLE_SIZE.x / 2.0 - PADDLE_PADDING;
+    let left_bound = layout.left_wall_x
+        + layout.wall_thickness / 2.0
+        + get_paddle_size().x / 2.0
+        + get_paddle_padding();
+    let right_bound = layout.right_wall_x
+        - layout.wall_thickness / 2.0
+        - get_paddle_size().x / 2.0
+        - get_paddle_padding();
 
     paddle_transform.translation.x = new_paddle_position.clamp(left_bound, right_bound);
 }
