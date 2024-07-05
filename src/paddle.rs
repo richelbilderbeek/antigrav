@@ -4,20 +4,20 @@ use bevy::prelude::*;
 pub struct Paddle;
 
 pub fn get_paddle_color() -> Color {
-    return Color::rgb(0.3, 0.3, 0.7);
+    Color::rgb(0.3, 0.3, 0.7)
 }
 
 // How close can the paddle get to the wall
 pub fn get_paddle_padding() -> f32 {
-    return 10.0;
+    10.0
 }
 
 pub fn get_paddle_size() -> Vec3 {
-    return Vec3::new(120.0, 20.0, 0.0);
+    Vec3::new(120.0, 20.0, 0.0)
 }
 
 pub fn get_paddle_speed() -> f32 {
-    return 500.0;
+    500.0
 }
 
 #[cfg(test)]

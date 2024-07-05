@@ -21,10 +21,10 @@ pub struct GameLayout {
 
 impl GameLayout {
     pub fn get_arena_height(&self) -> f32 {
-        return self.top_wall_y - self.bottom_wall_y;
+        self.top_wall_y - self.bottom_wall_y
     }
     pub fn get_arena_width(&self) -> f32 {
-        return self.right_wall_x - self.left_wall_x;
+        self.right_wall_x - self.left_wall_x
     }
 }
 
@@ -40,15 +40,15 @@ pub fn create_initial_layout() -> GameLayout {
 
     let paddle_y = bottom_wall_y + GAP_BETWEEN_PADDLE_AND_FLOOR;
 
-    let layout = GameLayout {
+    
+    GameLayout {
         paddle_y,
         left_wall_x,
         right_wall_x,
         top_wall_y,
         bottom_wall_y,
         wall_thickness: 10.0,
-    };
-    return layout;
+    }
 }
 
 #[cfg(test)]

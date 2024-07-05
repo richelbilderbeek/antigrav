@@ -8,17 +8,17 @@ pub struct Player {
 impl Player {
     // Thanks to Hikasu
     fn get_x(&self) -> f32 {
-        return self.sprite.transform.translation.x;
+        self.sprite.transform.translation.x
     }
 }
 
 pub fn create_player() -> Player {
-    return Player {
+    Player {
         sprite: SpriteBundle {
             transform: Transform::from_xyz(0.0, 0.0, 0.0),
             ..default()
         },
-    };
+    }
 }
 
 #[cfg(test)]

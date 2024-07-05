@@ -4,23 +4,23 @@ use bevy::prelude::*;
 pub struct Ball;
 
 pub fn get_ball_color() -> Color {
-    return Color::rgb(1.0, 0.5, 0.5);
+    Color::rgb(1.0, 0.5, 0.5)
 }
 
 pub fn get_ball_diameter() -> f32 {
-    return 30.0;
+    30.0
 }
 
 pub fn get_ball_starting_position() -> Vec3 {
-    return Vec3::new(0.0, -50.0, 1.0);
+    Vec3::new(0.0, -50.0, 1.0)
 }
 
 pub fn get_ball_speed() -> f32 {
-    return 400.0;
+    400.0
 }
 
 pub fn get_initial_ball_direction() -> Vec2 {
-    return Vec2::new(0.5, -0.5);
+    Vec2::new(0.5, -0.5)
 }
 
 #[cfg(test)]

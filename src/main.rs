@@ -11,7 +11,6 @@ use crate::collision::Collision;
 use crate::collision_event::CollisionEvent;
 use crate::game_layout::create_initial_layout;
 use crate::paddle::Paddle;
-use crate::player::Player;
 use crate::velocity::Velocity;
 use crate::wall::Wall;
 use bevy::{
@@ -59,7 +58,7 @@ fn create_app_without_event_loop() -> App {
             .chain(),
     );
     app.add_systems(Update, bevy::window::close_on_esc);
-    return app;
+    app
 }
 
 fn create_app() -> App {
@@ -75,7 +74,7 @@ fn create_app() -> App {
         .add_plugins(bevy::diagnostic::EntityCountDiagnosticsPlugin)
         .add_plugins(bevy::diagnostic::SystemInformationDiagnosticsPlugin)
         .add_plugins(PerfUiPlugin);
-    return app;
+    app
 }
 
 fn setup_ball(
@@ -278,7 +277,7 @@ fn count_n_balls(app: &App) -> usize {
             n += 1;
         }
     }
-    return n;
+    n
 }
 
 fn count_n_paddles(app: &App) -> usize {
@@ -291,7 +290,7 @@ fn count_n_paddles(app: &App) -> usize {
             n += 1;
         }
     }
-    return n;
+    n
 }
 
 /*
